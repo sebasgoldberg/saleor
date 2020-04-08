@@ -273,6 +273,7 @@ INSTALLED_APPS = [
     "impersonate",
     "phonenumber_field",
     "captcha",
+    "custom"
 ]
 
 
@@ -628,6 +629,7 @@ PLUGINS = [
     "saleor.extensions.plugins.avatax.plugin.AvataxPlugin",
     "saleor.extensions.plugins.vatlayer.plugin.VatlayerPlugin",
     "saleor.extensions.plugins.webhook.plugin.WebhookPlugin",
+    "custom.payment.gateways.cod.plugin.CODGatewayPlugin",
     "saleor.payment.gateways.dummy.plugin.DummyGatewayPlugin",
     "saleor.payment.gateways.stripe.plugin.StripeGatewayPlugin",
     "saleor.payment.gateways.braintree.plugin.BraintreeGatewayPlugin",
