@@ -333,6 +333,19 @@ class Order(ModelWithMetadata):
     def get_total_weight(self):
         return self.weight
 
+    def get_unfulfilled_ammount(self):
+        result = Money('0',settings.DEFAULT_CURRENCY)
+        for l in self.lines.all():
+            result += l.unit_price_gross * l.quantity_unfulfilled
+        return result
+
+    def get_unfulfilled_refundable_ammount(self):
+        zero = Money('0',settings.DEFAULT_CURRENCY)
+        result = self.get_unfulfilled_ammount() + self.total_balance
+        if result < zero:
+            result = zero
+        return result
+
 
 class OrderLineQueryset(models.QuerySet):
     def digital(self):
