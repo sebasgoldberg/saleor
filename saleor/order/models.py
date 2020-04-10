@@ -341,7 +341,7 @@ class Order(ModelWithMetadata):
 
     def get_unfulfilled_refundable_ammount(self):
         zero = Money('0',settings.DEFAULT_CURRENCY)
-        result = self.get_unfulfilled_ammount() + self.total_balance
+        result = self.get_unfulfilled_ammount() + self.total_balance - self.discount
         if result < zero:
             result = zero
         return result
