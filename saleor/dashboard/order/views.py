@@ -213,8 +213,9 @@ def refund_payment(request, order_pk, payment_pk):
     order = get_object_or_404(orders, pk=order_pk)
     payment = get_object_or_404(order.payments, pk=payment_pk)
     amount = payment.captured_amount
+    sugested_refund = order.get_unfulfilled_refundable_ammount()
     form = RefundPaymentForm(
-        request.POST or None, payment=payment, initial={"amount": amount}
+        request.POST or None, payment=payment, initial={"amount": sugested_refund.amount}
     )
     if form.is_valid() and form.refund(request.user):
         amount = form.cleaned_data["amount"]
@@ -230,6 +231,7 @@ def refund_payment(request, order_pk, payment_pk):
         "form": form,
         "order": order,
         "payment": payment,
+        "sugested_refund": sugested_refund
     }
     return TemplateResponse(
         request, "dashboard/order/modal/refund.html", ctx, status=status
