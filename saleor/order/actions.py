@@ -8,7 +8,7 @@ from django.utils.translation import pgettext_lazy
 from ..core import analytics
 from ..extensions.manager import get_extensions_manager
 from ..payment import ChargeStatus, CustomPaymentChoices, PaymentError
-from ..product.utils import decrease_stock
+from ..product.utils import decrease_stock, deallocate_stock, allocate_stock
 from . import FulfillmentStatus, OrderStatus, emails, events, utils
 from .emails import send_fulfillment_confirmation_to_customer, send_payment_confirmation
 from .models import Fulfillment, FulfillmentLine
@@ -161,7 +161,7 @@ def cancel_fulfillment(fulfillment: "Fulfillment", user: "User", restock: bool):
     events.fulfillment_canceled_event(
         order=fulfillment.order, user=user, fulfillment=fulfillment
     )
-    if restock:
+    if restock or fulfillment.is_canceling_items():
         events.fulfillment_restocked_items_event(
             order=fulfillment.order, user=user, fulfillment=fulfillment
         )
@@ -216,10 +216,13 @@ def clean_mark_order_as_paid(order: "Order"):
         )
 
 
-def fulfill_order_line(order_line, quantity):
+def fulfill_order_line(order_line, quantity, cancellation=False):
     """Fulfill order line with given quantity."""
     if order_line.variant and order_line.variant.track_inventory:
-        decrease_stock(order_line.variant, quantity)
+        if cancellation:
+            deallocate_stock(order_line.variant, quantity)
+        else:
+            decrease_stock(order_line.variant, quantity)
     order_line.quantity_fulfilled += quantity
     order_line.save(update_fields=["quantity_fulfilled"])
 

@@ -295,7 +295,10 @@ def restock_fulfillment_lines(fulfillment):
     """Return fulfilled products to corresponding stocks."""
     for line in fulfillment:
         if line.order_line.variant and line.order_line.variant.track_inventory:
-            increase_stock(line.order_line.variant, line.quantity, allocate=True)
+            if fulfillment.is_canceling_items():
+                allocate_stock(line.order_line.variant, line.quantity)
+            else:
+                increase_stock(line.order_line.variant, line.quantity, allocate=True)
 
 
 def sum_order_totals(qs):
