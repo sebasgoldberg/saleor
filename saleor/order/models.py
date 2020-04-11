@@ -480,6 +480,9 @@ class Fulfillment(ModelWithMetadata):
     def get_total_quantity(self):
         return sum([line.quantity for line in self])
 
+    def is_canceling_items(self):
+        return self.tracking_number == 'CANCEL'
+
 
 class FulfillmentLine(models.Model):
     order_line = models.ForeignKey(
