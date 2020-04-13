@@ -19,6 +19,7 @@ from .order.urls import urlpatterns as order_urls
 from .page.urls import urlpatterns as page_urls
 from .product.urls import urlpatterns as product_urls
 from .search.urls import urlpatterns as search_urls
+from saleor_mp.urls import urlpatterns as saleor_mp_urls
 
 handler404 = "saleor.core.views.handle_404"
 
@@ -33,6 +34,7 @@ non_translatable_urlpatterns = [
     ),
     url(r"^i18n/$", set_language, name="set_language"),
     url("", include("social_django.urls", namespace="social")),
+    url(r"^saleor_mp/", include((saleor_mp_urls, "saleor_mp"), namespace="saleor_mp")),
 ]
 
 translatable_urlpatterns = [
