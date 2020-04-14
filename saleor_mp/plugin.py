@@ -4,6 +4,8 @@ from typing import TYPE_CHECKING
 
 from django.utils.translation import pgettext_lazy
 
+from django.conf import settings
+
 from saleor.extensions import ConfigurationTypeField
 from saleor.extensions.base_plugin import BasePlugin
 
@@ -13,7 +15,9 @@ from saleor.payment.interface import GatewayConfig, GatewayResponse, PaymentData
 
 from .forms import MercadopagoPaymentForm
 
-from django.conf import settings
+from saleor.order.models import Order
+
+import mercadopago
 
 
 GATEWAY_NAME = "Mercadopago"
@@ -80,7 +84,7 @@ class MercadopagoGatewayPlugin(BasePlugin):
     def _payment_action(
         self, payment_information: "PaymentData", transaction_kind: str
     ) -> "GatewayResponse":
-        return NotImplemented
+        # return NotImplemented
         return GatewayResponse(
             is_success=True,
             action_required=False,
@@ -127,11 +131,20 @@ class MercadopagoGatewayPlugin(BasePlugin):
     ) -> "GatewayResponse":
         """Process the payment."""
         # @todo Solo deve ser llamado una vez procesado el pago.
-        return  self._payment_action(payment_information, TransactionKind.AUTH)
+        order = Order.objects.get(pk=payment_information.order_id)
+        mppayment = order.mppayments.last()
+        return GatewayResponse(
+            is_success=mppayment.is_approved(),
+            action_required=(not mppayment.is_approved()),
+            kind=( TransactionKind.CAPTURE if mppayment.is_approved() else TransactionKind.AUTH ),
+            amount=mppayment.mp_transaction_amount,
+            currency=payment_information.currency,
+            transaction_id=payment_information.token,
+            error=mppayment.get_error(),
+        )
+
 
     def _create_preference(self, payment_information: "PaymentData"):
-        import mercadopago
-        import json
 
         mp = mercadopago.MP(settings.SALEOR_MP_ACCESS_TOKEN)
 
@@ -177,8 +190,13 @@ class MercadopagoGatewayPlugin(BasePlugin):
     def create_form(
         self, data, payment_information: "PaymentData", previous_value
     ) -> "forms.Form":
+
         preference = self._create_preference(payment_information)
-        return MercadopagoPaymentForm(data={'preference_id': preference['id']})
+
+        return MercadopagoPaymentForm(
+            Order.objects.get(pk=payment_information.order_id),
+            data={'preference_id': preference['id']}
+            )
 
     @require_active_plugin
     def get_client_token(self, token_config: "TokenConfig", previous_value):
