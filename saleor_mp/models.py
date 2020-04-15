@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from datetime import datetime
 
 from saleor.order.models import Order
 
@@ -11,13 +12,15 @@ class Payment(models.Model):
     
     class STATUS_DETAIL:
         ACCREDITED = 'accredited'
+    
+    class Meta:
+        unique_together = [['mp_id', 'date_last_updated'], ]
 
     mp_id = models.CharField(
-        max_length=60,
-        unique=True
+        max_length=60
     )
 
-    # @todo ver si agregar el topic
+    date_last_updated = models.DateTimeField()
 
     order = models.ForeignKey(
         Order, related_name="mppayments", editable=False, on_delete=models.CASCADE
@@ -35,11 +38,27 @@ class Payment(models.Model):
         blank=True
     )
 
+    currency_id = models.CharField(max_length=settings.DEFAULT_CURRENCY_CODE_LENGTH, default='ARS')
+
     mp_transaction_amount = models.DecimalField(
         max_digits=settings.DEFAULT_MAX_DIGITS,
         decimal_places=settings.DEFAULT_DECIMAL_PLACES,
         default=0,
     )
+
+    total_paid_amount = models.DecimalField(
+        max_digits=settings.DEFAULT_MAX_DIGITS,
+        decimal_places=settings.DEFAULT_DECIMAL_PLACES,
+        default=0,
+    )
+
+    net_received_amount = models.DecimalField(
+        max_digits=settings.DEFAULT_MAX_DIGITS,
+        decimal_places=settings.DEFAULT_DECIMAL_PLACES,
+        default=0,
+    )
+
+    insertion_time = models.DateTimeField(auto_now_add=True)
 
     def is_approved(self):
         return self.mp_status == Payment.STATUS.APPROVED

@@ -130,15 +130,14 @@ class MercadopagoGatewayPlugin(BasePlugin):
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
         """Process the payment."""
-        # @todo Solo deve ser llamado una vez procesado el pago.
         order = Order.objects.get(pk=payment_information.order_id)
         mppayment = order.mppayments.last()
         return GatewayResponse(
             is_success=mppayment.is_approved(),
             action_required=(not mppayment.is_approved()),
             kind=( TransactionKind.CAPTURE if mppayment.is_approved() else TransactionKind.AUTH ),
-            amount=mppayment.mp_transaction_amount,
-            currency=payment_information.currency,
+            amount=mppayment.total_paid_amount,
+            currency=mppayment.currency_id,
             transaction_id=payment_information.token,
             error=mppayment.get_error(),
         )
@@ -149,18 +148,18 @@ class MercadopagoGatewayPlugin(BasePlugin):
         mp = mercadopago.MP(settings.SALEOR_MP_ACCESS_TOKEN)
 
         options = {
-            # "auto_return": "approved",
-            "back_urls": {
-                "failure": '{}/failure/{}'.format(
-                    settings.SALEOR_MP_BACK_URL_BASE,
-                    payment_information.order_id), 
-                "pending": '{}/pending/{}'.format(
-                    settings.SALEOR_MP_BACK_URL_BASE,
-                    payment_information.order_id),
-                "success": '{}/success/{}'.format(
-                    settings.SALEOR_MP_BACK_URL_BASE,
-                    payment_information.order_id),
-            },
+            # # "auto_return": "approved",
+            # "back_urls": {
+            #     "failure": '{}/failure/{}'.format(
+            #         settings.SALEOR_MP_BACK_URL_BASE,
+            #         payment_information.order_id), 
+            #     "pending": '{}/pending/{}'.format(
+            #         settings.SALEOR_MP_BACK_URL_BASE,
+            #         payment_information.order_id),
+            #     "success": '{}/success/{}'.format(
+            #         settings.SALEOR_MP_BACK_URL_BASE,
+            #         payment_information.order_id),
+            # },
             "items": [
                 {
                     "title": "La Agroecológica - Pedido #{}".format(payment_information.order_id),
@@ -169,7 +168,6 @@ class MercadopagoGatewayPlugin(BasePlugin):
                     "unit_price": float(payment_information.amount)
                 }
             ],
-            # @todo Adicionar a las urls alguna clave por temas de seguridad.
             'notification_url': '{}/{}/{}/'.format(
                 settings.SALEOR_MP_NOTIFICATION_URL_BASE,
                 payment_information.order_id,
@@ -181,7 +179,7 @@ class MercadopagoGatewayPlugin(BasePlugin):
             # },
         }
 
-        # @todo Tratar errores.
+        # TODO Tratar errores.
         response = mp.create_preference(options)
         preference = response['response']
         return preference
