@@ -52,10 +52,8 @@ def notification(request, order_id, secret):
 
     date_last_updated = datetime.strptime(mp_payment_info['date_last_updated'].replace(':',''),'%Y-%m-%dT%H%M%S.%f%z')
 
-    paymentMP, created = PaymentMP.objects.update_or_create(
-        mp_id=payment_id,
-        date_last_updated=date_last_updated,
-        defaults={
+    PaymentMP.update_or_create(payment_id, {
+            'date_last_updated': date_last_updated,
             'order': order,
             'mp_status': mp_payment_info['status'],
             'mp_status_detail': mp_payment_info['status_detail'],
@@ -63,7 +61,6 @@ def notification(request, order_id, secret):
             'mp_transaction_amount': Decimal(mp_payment_info['transaction_amount']),
             'total_paid_amount': Decimal(mp_payment_info['transaction_details']['total_paid_amount']),
             'net_received_amount': Decimal(mp_payment_info['transaction_details']['net_received_amount']),
-            },
-    )
+            })
 
     return HttpResponse(status=201)

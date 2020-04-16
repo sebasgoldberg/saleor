@@ -17,6 +17,8 @@ from .forms import MercadopagoPaymentForm
 
 from saleor.order.models import Order
 
+from .models import Payment as PaymentMP
+
 import mercadopago
 
 
@@ -117,7 +119,39 @@ class MercadopagoGatewayPlugin(BasePlugin):
     def refund_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-        return self._payment_action(payment_information, TransactionKind.REFUND)
+
+        mp = mercadopago.MP(settings.SALEOR_MP_ACCESS_TOKEN)
+        response = mp.post(
+            "/v1/payments/{}/refunds".format(payment_information.token),
+            { "amount": float(payment_information.amount) }
+            )
+
+        if response['status'] != 201:
+            message = response['response']['message']
+            return GatewayResponse(
+                is_success=False,
+                action_required=True,
+                kind=TransactionKind.REFUND,
+                amount=payment_information.amount,
+                currency=payment_information.currency,
+                transaction_id=payment_information.token,
+                error=message,
+            )
+
+        p = PaymentMP.objects.filter(mp_id=payment_information.token).last()
+        refund_data = response['response']
+
+        refund, _ = p.register_refund(refund_data['id'], refund_data['amount'], refund_data['date_created'], refund_data['status'])
+
+        return GatewayResponse(
+                is_success=True,
+                action_required=False,
+                kind=TransactionKind.REFUND,
+                amount=refund.amount,
+                currency=p.currency_id,
+                transaction_id=payment_information.token,
+                error=None,
+            )
 
     @require_active_plugin
     def void_payment(
