@@ -642,6 +642,7 @@ PLUGINS = [
 # False to use the old editor from dashboard 1.0
 USE_JSON_CONTENT = get_bool_from_env("USE_JSON_CONTENT", False)
 
+SALEOR_MP_PUBLIC_KEY = os.environ.get("SALEOR_MP_PUBLIC_KEY")
 SALEOR_MP_ACCESS_TOKEN = os.environ.get("SALEOR_MP_ACCESS_TOKEN")
 SALEOR_MP_BACK_URL_BASE = os.environ.get("SALEOR_MP_BACK_URL_BASE")
 SALEOR_MP_NOTIFICATION_URL_BASE = os.environ.get("SALEOR_MP_NOTIFICATION_URL_BASE")

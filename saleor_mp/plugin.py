@@ -240,4 +240,8 @@ class MercadopagoGatewayPlugin(BasePlugin):
 
     @require_active_plugin
     def get_payment_config(self, previous_value):
-        return [{"field": "store_customer_card", "value": False}]
+        config = self._get_gateway_config()
+        return [
+            {"field": "store_customer_card", "value": config.store_customer},
+            {"field": "client_token", "value": settings.SALEOR_MP_PUBLIC_KEY},
+        ]
