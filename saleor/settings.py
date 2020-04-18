@@ -273,6 +273,8 @@ INSTALLED_APPS = [
     "impersonate",
     "phonenumber_field",
     "captcha",
+    # Custom apps
+    "saleor_mp",
 ]
 
 
@@ -632,9 +634,16 @@ PLUGINS = [
     "saleor.payment.gateways.stripe.plugin.StripeGatewayPlugin",
     "saleor.payment.gateways.braintree.plugin.BraintreeGatewayPlugin",
     "saleor.payment.gateways.razorpay.plugin.RazorpayGatewayPlugin",
+    "saleor_mp.plugin.MercadopagoGatewayPlugin",
 ]
 
 # Whether DraftJS should be used be used instead of HTML
 # True to use DraftJS (JSON based), for the 2.0 dashboard
 # False to use the old editor from dashboard 1.0
 USE_JSON_CONTENT = get_bool_from_env("USE_JSON_CONTENT", False)
+
+SALEOR_MP_ACCESS_TOKEN = os.environ.get("SALEOR_MP_ACCESS_TOKEN")
+SALEOR_MP_BACK_URL_BASE = os.environ.get("SALEOR_MP_BACK_URL_BASE")
+SALEOR_MP_NOTIFICATION_URL_BASE = os.environ.get("SALEOR_MP_NOTIFICATION_URL_BASE")
+SALEOR_MP_SECRET = os.environ.get("SALEOR_MP_SECRET")
+
