@@ -104,6 +104,7 @@ def start_payment(request, order, gateway):
         if (
             order.is_fully_paid()
             or payment.charge_status == ChargeStatus.FULLY_REFUNDED
+            or payment.charge_status == ChargeStatus.WAITING_FOR_AUTH
         ):
             return redirect(order.get_absolute_url())
 
