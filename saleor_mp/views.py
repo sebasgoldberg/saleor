@@ -77,7 +77,7 @@ def notification(request, order_id, secret):
 
     if mp_payment_info['status'] in WAITING_STATES:
         kind = TransactionKind.WAIT_FOR_AUTH
-    elif mp_payment_info['status'] in APPROVED_STATES:
+    elif mp_payment_info['status'] in APPROVED_STATES and mp_payment_info['status_detail'] == 'accredited':
         kind = TransactionKind.CAPTURE
         amount = Decimal(mp_payment_info['transaction_amount'])
     elif mp_payment_info['status'] in REJECTED_STATES:
