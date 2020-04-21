@@ -14,20 +14,23 @@ class MercadopagoPaymentForm(forms.Form):
         self.order = order
 
     def is_valid(self):
-        # Acá deberia validarse si ya fue realizado el pago
-        # try:
+        super(MercadopagoPaymentForm, self).is_valid()
+        return False
+    #     # Acá deberia validarse si ya fue realizado el pago
+    #     # try:
 
-        #     mppayment = self.order.mppayments.exists()
+    #     #     mppayment = self.order.mppayments.exists()
 
-        #     if mppayment.status == Payment.STATUS.APPROVED and
-        #         mppayment.status_detail == Payment.STATUS_DETAIL.ACCREDITED:
-        #         return True
+    #     #     if mppayment.status == Payment.STATUS.APPROVED and
+    #     #         mppayment.status_detail == Payment.STATUS_DETAIL.ACCREDITED:
+    #     #         return True
 
-        # except Payment.DoesNotExist:
-        #     pass
+    #     # except Payment.DoesNotExist:
+    #     #     pass
 
-        # return False
-        return self.order.mppayments.exists()
+    #     # return False
+    #     # return self.order.mppayments.exists()
+    #     return True
         
 
     def get_payment_token(self):
@@ -37,4 +40,5 @@ class MercadopagoPaymentForm(forms.Form):
         """
         # preference_id = self.cleaned_data["preference_id"]
         # return preference_id
-        return self.order.mppayments.last().mp_id
+        # return self.order.mppayments.last().mp_id
+        return self.cleaned_data['preference_id']
