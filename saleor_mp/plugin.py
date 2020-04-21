@@ -163,17 +163,25 @@ class MercadopagoGatewayPlugin(BasePlugin):
     def process_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
+        return previous_value
         """Process the payment."""
-        order = Order.objects.get(pk=payment_information.order_id)
-        mppayment = order.mppayments.last()
+        # order = Order.objects.get(pk=payment_information.order_id)
+        # mppayment = order.mppayments.last()
         return GatewayResponse(
-            is_success=mppayment.is_approved(),
-            action_required=(not mppayment.is_approved()),
-            kind=( TransactionKind.CAPTURE if mppayment.is_approved() else TransactionKind.AUTH ),
-            amount=mppayment.total_paid_amount,
-            currency=mppayment.currency_id,
+            # is_success=mppayment.is_approved(),
+            # action_required=(not mppayment.is_approved()),
+            # kind=( TransactionKind.CAPTURE if mppayment.is_approved() else TransactionKind.AUTH ),
+            # amount=mppayment.total_paid_amount,
+            # currency=mppayment.currency_id,
+            # transaction_id=payment_information.token,
+            # error=mppayment.get_error(),
+            is_success=True,
+            action_required=True,
+            kind=TransactionKind.WAITING_FOR_AUTH,
+            amount=0,
+            currency=payment_information.currency,
             transaction_id=payment_information.token,
-            error=mppayment.get_error(),
+            error="",
         )
 
 
@@ -240,4 +248,8 @@ class MercadopagoGatewayPlugin(BasePlugin):
 
     @require_active_plugin
     def get_payment_config(self, previous_value):
-        return [{"field": "store_customer_card", "value": False}]
+        config = self._get_gateway_config()
+        return [
+            {"field": "store_customer_card", "value": config.store_customer},
+            {"field": "client_token", "value": settings.SALEOR_MP_PUBLIC_KEY},
+        ]

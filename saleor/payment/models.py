@@ -168,6 +168,7 @@ class Payment(models.Model):
             ChargeStatus.PARTIALLY_CHARGED,
             ChargeStatus.FULLY_CHARGED,
             ChargeStatus.PARTIALLY_REFUNDED,
+            ChargeStatus.PARTIALLY_CANCELLED,
         )
         return (
             self.is_active

@@ -63,4 +63,68 @@ def notification(request, order_id, secret):
             'net_received_amount': Decimal(mp_payment_info['transaction_details']['net_received_amount']),
             })
 
+
+    from saleor.payment import TransactionKind
+
+    # TODO Verificar status
+    WAITING_STATES = [ 'authorized', 'in_process', 'pending', ]
+    APPROVED_STATES = [ 'approved', ]
+    REJECTED_STATES = [ 'cancelled', 'rejected',]
+    CANCELLED_STATES = [ 'charged_back', 'vacated', ]
+
+    kind = None
+    amount = Decimal(0)
+
+    if mp_payment_info['status'] in WAITING_STATES:
+        kind = TransactionKind.WAIT_FOR_AUTH
+    elif mp_payment_info['status'] in APPROVED_STATES:
+        kind = TransactionKind.CAPTURE
+        amount = Decimal(mp_payment_info['transaction_amount'])
+    elif mp_payment_info['status'] in REJECTED_STATES:
+        kind = TransactionKind.REJECT
+    elif mp_payment_info['status'] in CANCELLED_STATES:
+        kind = TransactionKind.CANCEL
+
+    if kind is None:
+        return HttpResponse(status=201)
+
+    process_mercadopago_transaction(
+        order,
+        kind,
+        payment_id,
+        amount,
+        mp_payment_info['currency_id']
+        )
+
     return HttpResponse(status=201)
+
+from saleor.payment.utils import gateway_postprocess, create_transaction, create_payment_information
+from saleor.payment.interface import  GatewayResponse
+
+def process_mercadopago_transaction(order, kind, payment_id, amount, currency):
+
+    payment = order.payments.filter(gateway="Mercadopago").last()
+
+    payment_data = create_payment_information(
+        payment=payment, payment_token=payment_id
+    )
+
+    gateway_response = GatewayResponse(
+        is_success=True,
+        action_required=False,
+        kind=kind,
+        amount=amount,
+        currency=currency,
+        transaction_id=payment_id,
+        error="",
+    )
+
+    trx = create_transaction(
+        payment=payment,
+        kind=kind,
+        payment_information=payment_data,
+        error_msg="",
+        gateway_response=gateway_response,
+    )
+
+    gateway_postprocess(trx, trx.payment)
