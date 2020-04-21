@@ -226,8 +226,7 @@ def gateway_postprocess(transaction, payment):
 
     elif transaction_kind == TransactionKind.REJECT:
         payment.charge_status = ChargeStatus.REJECTED
-        payment.is_active = False
-        payment.save(update_fields=["charge_status", "is_active"])
+        payment.save(update_fields=["charge_status"])
 
     elif transaction_kind == TransactionKind.CANCEL:
         changed_fields = ["captured_amount"]
