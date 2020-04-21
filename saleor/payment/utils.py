@@ -220,6 +220,26 @@ def gateway_postprocess(transaction, payment):
         changed_fields += ["charge_status", "is_active"]
         payment.save(update_fields=changed_fields)
 
+    elif transaction_kind == TransactionKind.WAIT_FOR_AUTH:
+        payment.charge_status = ChargeStatus.WAITING_FOR_AUTH
+        payment.save(update_fields=["charge_status", ])
+
+    elif transaction_kind == TransactionKind.REJECT:
+        payment.charge_status = ChargeStatus.REJECTED
+        payment.is_active = False
+        payment.save(update_fields=["charge_status", "is_active"])
+
+    elif transaction_kind == TransactionKind.CANCEL:
+        changed_fields = ["captured_amount"]
+        payment.captured_amount -= transaction.amount
+        payment.charge_status = ChargeStatus.PARTIALLY_CANCELLED
+        if payment.captured_amount <= 0:
+            payment.charge_status = ChargeStatus.FULLY_CANCELLED
+            payment.is_active = False
+        changed_fields += ["charge_status", "is_active"]
+        payment.save(update_fields=changed_fields)
+
+
 
 def fetch_customer_id(user, gateway):
     """Retrieve users customer_id stored for desired gateway."""

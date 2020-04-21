@@ -60,15 +60,18 @@ class TransactionKind:
     VOID = "void"
     REFUND = "refund"
     CONFIRM = "confirm"
-    # FIXME we could use another status like WAITING_FOR_AUTH for transactions
-    # Which were authorized, but needs to be confirmed manually by staff
-    # eg. Braintree with "submit_for_settlement" enabled
+    WAIT_FOR_AUTH = "wait" # Wait for payment confirmation.
+    REJECT = "reject" # Reject a payment when is waiting a confirmation.
+    CANCEL = "cancel" # Cancel a payment when is already captured.
     CHOICES = [
         (AUTH, pgettext_lazy("transaction kind", "Authorization")),
         (REFUND, pgettext_lazy("transaction kind", "Refund")),
         (CAPTURE, pgettext_lazy("transaction kind", "Capture")),
         (VOID, pgettext_lazy("transaction kind", "Void")),
         (CONFIRM, pgettext_lazy("transaction kind", "Confirm")),
+        (WAIT_FOR_AUTH, pgettext_lazy("transaction kind", "Wait Confirmation")),
+        (REJECT, pgettext_lazy("transaction kind", "Reject")),
+        (CANCEL, pgettext_lazy("transaction kind", "Cancel")),
     ]
 
 
@@ -90,6 +93,10 @@ class ChargeStatus:
     FULLY_CHARGED = "fully-charged"
     PARTIALLY_REFUNDED = "partially-refunded"
     FULLY_REFUNDED = "fully-refunded"
+    WAITING_FOR_AUTH = "wait-auth" # Is waiting for a confirmation.
+    REJECTED = "rejected" # Was rejected after wait for a confirmation.
+    PARTIALLY_CANCELLED = "partially-cancelled" # Partially cancelled a previously captured payment.
+    FULLY_CANCELLED = "fully-cancelled" # Fully cancelled a previously captured payment.
 
     CHOICES = [
         (NOT_CHARGED, pgettext_lazy("payment status", "Not charged")),
@@ -97,4 +104,8 @@ class ChargeStatus:
         (FULLY_CHARGED, pgettext_lazy("payment status", "Fully charged")),
         (PARTIALLY_REFUNDED, pgettext_lazy("payment status", "Partially refunded")),
         (FULLY_REFUNDED, pgettext_lazy("payment status", "Fully refunded")),
+        (WAITING_FOR_AUTH, pgettext_lazy("transaction kind", "Wait Confirmation")),
+        (REJECTED, pgettext_lazy("transaction kind", "Rejected")),
+        (PARTIALLY_CANCELLED, pgettext_lazy("transaction kind", "Partially cancelled")),
+        (FULLY_CANCELLED, pgettext_lazy("transaction kind", "Fully cancelled")),
     ]
