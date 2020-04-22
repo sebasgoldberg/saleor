@@ -5,6 +5,8 @@ from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 
 from django.conf import settings
+from django.db import transaction
+
 from saleor.order.models import Order
 from saleor.order.actions import mark_order_as_paid
 
@@ -103,28 +105,29 @@ from saleor.payment.interface import  GatewayResponse
 
 def process_mercadopago_transaction(order, kind, payment_id, amount, currency):
 
-    payment = order.payments.filter(gateway="Mercadopago").last()
+    with transaction.atomic():
+        payment = order.payments.filter(gateway="Mercadopago").last()
 
-    payment_data = create_payment_information(
-        payment=payment, payment_token=payment_id
-    )
+        payment_data = create_payment_information(
+            payment=payment, payment_token=payment_id
+        )
 
-    gateway_response = GatewayResponse(
-        is_success=True,
-        action_required=False,
-        kind=kind,
-        amount=amount,
-        currency=currency,
-        transaction_id=payment_id,
-        error="",
-    )
+        gateway_response = GatewayResponse(
+            is_success=True,
+            action_required=False,
+            kind=kind,
+            amount=amount,
+            currency=currency,
+            transaction_id=payment_id,
+            error="",
+        )
 
-    trx = create_transaction(
-        payment=payment,
-        kind=kind,
-        payment_information=payment_data,
-        error_msg="",
-        gateway_response=gateway_response,
-    )
+        trx = create_transaction(
+            payment=payment,
+            kind=kind,
+            payment_information=payment_data,
+            error_msg="",
+            gateway_response=gateway_response,
+        )
 
-    gateway_postprocess(trx, trx.payment)
+        gateway_postprocess(trx, trx.payment)
