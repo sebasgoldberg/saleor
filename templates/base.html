@@ -27,6 +27,7 @@
 
   {% include 'favicon.html' %}
   {% render_bundle 'storefront' 'css' attrs='async' %}
+  {% render_bundle 'mercadopago' 'css' attrs='async' %}
 
   {% block stylesheet %}{% endblock stylesheet %}
 
@@ -303,6 +304,7 @@
 {% block footer_scripts %}
   <script type="text/javascript" src="{% url 'javascript-catalog' %}"></script>
   {% render_bundle 'storefront' 'js' %}
+  {% render_bundle 'mercadopago' 'js' %}
 {% endblock footer_scripts %}
 {% if LANGUAGES|length > 1 %}
   {% include "_language_picker_modal.html" %}

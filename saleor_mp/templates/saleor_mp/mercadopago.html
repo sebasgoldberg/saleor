@@ -5,14 +5,16 @@
 {% block forms %}
 <div class="checkout__payment-form">
 
-  <form id="payment-form" method="POST">
+  <form id="payment-form" method="POST" class="mercadopago hidden">
     {% csrf_token %}
     <script
      src="https://www.mercadopago.com.ar/integrations/v1/web-payment-checkout.js"
-     data-preference-id="{{form.preference_id.data}}">
+     data-preference-id="{{form.preference_id.data}}"
+     data-button-label='{% trans "Pagar con Mercadopago" context "Payment form (Mercadopago)" %}'
+     >
     </script>
   </form>
-  
+
   <!-- {% comment %}
   <form method="POST" id="payment-form" class="form-horizontal"{% if form.action %} action="{{ form.action }}"{% endif %} novalidate>
     {% csrf_token %}
