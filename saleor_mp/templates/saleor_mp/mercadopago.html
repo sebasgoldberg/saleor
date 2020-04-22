@@ -1,6 +1,18 @@
 {% extends "order/payment/details.html" %}
+{% load render_bundle from webpack_loader %}
 {% load bootstrap_form from bootstrap4 %}
 {% load i18n %}
+
+
+{% block stylesheet %}
+  {{ block.super }}
+  {% render_bundle 'mercadopago' 'css' attrs='async' %}
+{% endblock stylesheet %}
+
+{% block footer_scripts %}
+  {{ block.super }}
+  {% render_bundle 'mercadopago' 'js' %}
+{% endblock footer_scripts %}
 
 {% block forms %}
 <div class="checkout__payment-form">
