@@ -58,7 +58,8 @@ module.exports = (_, argv) => {
     entry: {
       dashboard: './saleor/static/dashboard/js/dashboard.js',
       document: './saleor/static/dashboard/js/document.js',
-      storefront: './saleor/static/js/storefront.js'
+      storefront: './saleor/static/js/storefront.js',
+      mercadopago: './saleor_mp/static/js/mercadopago.js',
     },
     output: output,
     module: {

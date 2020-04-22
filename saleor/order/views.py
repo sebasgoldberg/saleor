@@ -101,10 +101,25 @@ def start_payment(request, order, gateway):
             extra_data=extra_data,
         )
 
+        # FIXME Should be possible to have a better way to assure that the response of the gateway was already processed.
+        if request.method == 'POST':
+
+            import time
+            sleeped = 0
+            while sleeped < 3:
+                if ( order.is_fully_paid() or 
+                    payment.charge_status == ChargeStatus.WAITING_FOR_AUTH ):
+                    break
+                time.sleep(0.5)
+                order.refresh_from_db()
+                payment.refresh_from_db()
+                sleeped += 0.5
+
+
         if (
             order.is_fully_paid()
             or payment.charge_status == ChargeStatus.FULLY_REFUNDED
-            or payment.charge_status == ChargeStatus.WAITING_FOR_AUTH
+            or ( request.method == 'POST' and payment.charge_status == ChargeStatus.WAITING_FOR_AUTH )
         ):
             return redirect(order.get_absolute_url())
 
