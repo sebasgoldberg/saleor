@@ -17,10 +17,7 @@ from .forms import MercadopagoPaymentForm
 
 from saleor.order.models import Order
 
-from .models import Payment as PaymentMP
-
-import mercadopago
-
+from . import create_preference, refund_payment
 
 GATEWAY_NAME = "Mercadopago"
 
@@ -83,158 +80,52 @@ class MercadopagoGatewayPlugin(BasePlugin):
     def _get_gateway_config(self):
         return self.config
 
-    def _payment_action(
-        self, payment_information: "PaymentData", transaction_kind: str
-    ) -> "GatewayResponse":
-        # return NotImplemented
-        return GatewayResponse(
-            is_success=True,
-            action_required=False,
-            kind=transaction_kind,
-            amount=payment_information.amount,
-            currency=payment_information.currency,
-            transaction_id=payment_information.token,
-            error=None,
-        )
-
     @require_active_plugin
     def authorize_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-        return self._payment_action(payment_information, TransactionKind.AUTH)
+        return previous_value
 
     @require_active_plugin
     def capture_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-        return self._payment_action(payment_information, TransactionKind.CAPTURE)
+        return previous_value
 
     @require_active_plugin
     def confirm_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-        return self._payment_action(payment_information, TransactionKind.CAPTURE)
+        return previous_value
 
     @require_active_plugin
     def refund_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-
-        mp = mercadopago.MP(settings.SALEOR_MP_ACCESS_TOKEN)
-        response = mp.post(
-            "/v1/payments/{}/refunds".format(payment_information.token),
-            { "amount": float(payment_information.amount) }
-            )
-
-        if response['status'] != 201:
-            message = response['response']['message']
-            return GatewayResponse(
-                is_success=False,
-                action_required=True,
-                kind=TransactionKind.REFUND,
-                amount=payment_information.amount,
-                currency=payment_information.currency,
-                transaction_id=payment_information.token,
-                error=message,
-            )
-
-        p = PaymentMP.objects.filter(mp_id=payment_information.token).last()
-        refund_data = response['response']
-
-        refund, _ = p.register_refund(refund_data['id'], refund_data['amount'], refund_data['date_created'], refund_data['status'])
-
-        return GatewayResponse(
-                is_success=True,
-                action_required=False,
-                kind=TransactionKind.REFUND,
-                amount=refund.amount,
-                currency=p.currency_id,
-                transaction_id=payment_information.token,
-                error=None,
-            )
+        return refund_payment(payment_information, previous_value)
 
     @require_active_plugin
     def void_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
-        return  self._payment_action(payment_information, TransactionKind.VOID)
+        return previous_value
 
     @require_active_plugin
     def process_payment(
         self, payment_information: "PaymentData", previous_value
     ) -> "GatewayResponse":
+        # There is no process payment, because the gateway sends
+        # requests to modify the payment status.
         return previous_value
-        """Process the payment."""
-        # order = Order.objects.get(pk=payment_information.order_id)
-        # mppayment = order.mppayments.last()
-        return GatewayResponse(
-            # is_success=mppayment.is_approved(),
-            # action_required=(not mppayment.is_approved()),
-            # kind=( TransactionKind.CAPTURE if mppayment.is_approved() else TransactionKind.AUTH ),
-            # amount=mppayment.total_paid_amount,
-            # currency=mppayment.currency_id,
-            # transaction_id=payment_information.token,
-            # error=mppayment.get_error(),
-            is_success=True,
-            action_required=True,
-            kind=TransactionKind.WAITING_FOR_AUTH,
-            amount=0,
-            currency=payment_information.currency,
-            transaction_id=payment_information.token,
-            error="",
-        )
-
-
-    def _create_preference(self, payment_information: "PaymentData"):
-
-        mp = mercadopago.MP(settings.SALEOR_MP_ACCESS_TOKEN)
-
-        options = {
-            # # "auto_return": "approved",
-            # "back_urls": {
-            #     "failure": '{}/failure/{}'.format(
-            #         settings.SALEOR_MP_BACK_URL_BASE,
-            #         payment_information.order_id), 
-            #     "pending": '{}/pending/{}'.format(
-            #         settings.SALEOR_MP_BACK_URL_BASE,
-            #         payment_information.order_id),
-            #     "success": '{}/success/{}'.format(
-            #         settings.SALEOR_MP_BACK_URL_BASE,
-            #         payment_information.order_id),
-            # },
-            "items": [
-                {
-                    "title": "La Agroecológica - Pedido #{}".format(payment_information.order_id),
-                    "quantity": 1,
-                    "currency_id": "ARS",
-                    "unit_price": float(payment_information.amount)
-                }
-            ],
-            'notification_url': '{}/{}/{}/'.format(
-                settings.SALEOR_MP_NOTIFICATION_URL_BASE,
-                payment_information.order_id,
-                settings.SALEOR_MP_SECRET),
-            # 'redirect_urls': { 
-            #     'failure': 'https://agroeco.iamsoft.org/redirect_urls/failure/{}'.format(payment_information.order_id), 
-            #     'pending': 'https://agroeco.iamsoft.org/redirect_urls/pending/{}'.format(payment_information.order_id),
-            #     'success': 'https://agroeco.iamsoft.org/redirect_urls/success/{}'.format(payment_information.order_id),
-            # },
-        }
-
-        # TODO Tratar errores.
-        response = mp.create_preference(options)
-        preference = response['response']
-        return preference
 
     @require_active_plugin
     def create_form(
         self, data, payment_information: "PaymentData", previous_value
     ) -> "forms.Form":
 
-        preference = self._create_preference(payment_information)
+        preference = create_preference(payment_information)
 
         return MercadopagoPaymentForm(
-            Order.objects.get(pk=payment_information.order_id),
             data={'preference_id': preference['id']}
             )
 
