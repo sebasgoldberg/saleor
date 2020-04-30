@@ -275,6 +275,7 @@ INSTALLED_APPS = [
     "captcha",
     # Custom apps
     "saleor_mp",
+    "agroeco",
 ]
 
 
