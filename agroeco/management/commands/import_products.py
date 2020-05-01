@@ -69,11 +69,11 @@ class Command(BaseCommand):
                 if not attribute_value:
                     continue
 
-                attribute, _ = Attribute.objects.get_or_create(
+                attribute, _ = Attribute.objects.update_or_create(
                     name=attribute_name, 
                     defaults={
                         'slug': slugify(attribute_name),
-                        'input_type': AttributeInputType.DROPDOWN
+                        'input_type': AttributeInputType.DROPDOWN,
                     })
 
                 value, _ = attribute.values.get_or_create(
