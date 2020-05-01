@@ -71,6 +71,9 @@ def my_handler(sender, instance, raw, **kwargs):
     if raw:
         return
 
+    if not instance.image:
+        return
+
     instance.image = square_and_resize(instance.image)
 
     pass
