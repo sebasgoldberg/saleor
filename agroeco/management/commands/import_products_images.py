@@ -26,8 +26,8 @@ class Command(BaseCommand):
     def update_or_create_product_image(self, product):
 
         gis.search({
-            'q': '{} {}'.format(product.name, product.category.name),
-            'imgSize': 'medium',
+            'q': '{} {}'.format(product.get_slug(), product.category.slug),
+            'imgSize': 'large',
             'num': 1
         })
 

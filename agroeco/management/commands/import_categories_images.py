@@ -27,7 +27,7 @@ class Command(BaseCommand):
 
         gis.search({
             'q': '{}'.format(category.name),
-            'imgSize': 'medium',
+            'imgSize': 'xxlarge',
             'num': 1
         })
 
