@@ -21,20 +21,30 @@ class Command(BaseCommand):
     help = "Update products images downloaded from the internet."
 
     def add_arguments(self, parser):
+
         parser.add_argument('product_name', nargs='*', type=str)
 
-    def update_or_create_product_image(self, product):
+        parser.add_argument('--num', type=int, nargs='?', default=1,
+            help='Number of images per product',
+        )
+
+    def update_or_create_product_image(self, product, num):
 
         gis.search({
             'q': '{} {}'.format(product.get_slug(), product.category.slug),
             'imgSize': 'large',
-            'num': 1
+            'num': num
         })
+
+        product_images = [ image for image in product.images.all() ]
 
         for image in gis.results():
 
-            product_image, _ = product.images.get_or_create()
-
+            product_image = ( 
+                product.images.create() if len(product_images) == 0 
+                else product_images.pop(0) 
+                )
+                
             _, file_extension = os.path.splitext(image.url)
 
             bytes_io = BytesIO()
@@ -48,7 +58,7 @@ class Command(BaseCommand):
 
             product_image.save()
 
-    def import_products_images(self, products_names):
+    def import_products_images(self, products_names, num):
         
         if len(products_names) == 0:
             q = Product.objects.all()
@@ -57,7 +67,7 @@ class Command(BaseCommand):
 
         for p in q:
             try:
-                self.update_or_create_product_image(p)
+                self.update_or_create_product_image(p, num)
             except Exception:
                 print('Error en producto {}.'.format(p))
 
@@ -65,4 +75,4 @@ class Command(BaseCommand):
 
         self.stdout.write('Update products using file as input.')
 
-        self.import_products_images(options['product_name'])
+        self.import_products_images(options['product_name'], options['num'])
