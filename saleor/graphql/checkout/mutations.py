@@ -223,7 +223,10 @@ class CheckoutCreate(ModelMutation, I18nMixin):
     def clean_input(cls, info, instance: models.Checkout, data, input_cls=None):
         cleaned_input = super().clean_input(info, instance, data)
         user = info.context.user
-        country = info.context.country.code
+        try:
+            country = instance.country.code
+        except Exception:
+            country = info.context.country.code
 
         # Resolve and process the lines, retrieving the variants and quantities
         lines = data.pop("lines", None)
